@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리 집 AI 비서 실습자료</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* 꿀쌤 브라운·골드 팔레트 / 한 칼럼, 폰에서 읽고 복사하는 카드 목록 / 단일 라이트 테마 */
+  :root {
+    color-scheme: light;
+    --ink: #2d1f18;
+    --brown: #5c3d2e;
+    --gold: #c49a3c;
+    --paper: #faf8f3;
+    --card: #fffdf6;
+    --line: #ddd0bb;
+    --soft: #f0ead6;
+    --muted: #6f5f52;
+    --fill-bg: #ffe2d4;
+    --fill-ink: #a93a10;
+    --ok: #3e6b4f;
+    --font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font); font-size: 17px; line-height: 1.6;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; }
+
+  header { background: var(--brown); color: #fffdf6; padding: 28px 16px 22px; }
+  header .in { max-width: 560px; margin: 0 auto; }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; color: #e7c97a; font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 28px; line-height: 1.25; margin: 0 0 8px; font-weight: 700; text-wrap: balance; }
+  header p { margin: 0; color: #eadfcb; font-size: 16px; }
+
+  .how { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .how li { counter-increment: s; display: flex; gap: 10px; align-items: baseline; font-size: 16px; }
+  .how li::before { content: counter(s); flex: none; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--gold); color: var(--brown); font-weight: 700; font-size: 14px;
+    display: inline-flex; align-items: center; justify-content: center; transform: translateY(2px); }
+  mark.fill { background: var(--fill-bg); color: var(--fill-ink); font-weight: 700; border-radius: 4px; padding: 0 3px; }
+  header mark.fill { background: #ffd9c6; }
+
+  .safety { margin: 18px 0 8px; padding: 14px 16px; background: var(--soft); border-left: 5px solid var(--gold); border-radius: 8px; }
+  .safety h2 { font-size: 16px; margin: 0 0 6px; color: var(--brown); }
+  .safety ul { margin: 0; padding-left: 20px; }
+  .safety li { margin: 2px 0; font-size: 16px; }
+
+  nav { position: sticky; top: 0; z-index: 5; background: var(--paper); padding: 10px 0; border-bottom: 1px solid var(--line); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+  nav .row { display: flex; gap: 8px; overflow-x: auto; }
+  nav button { flex: none; min-width: 48px; height: 44px; border: 1px solid var(--line); background: var(--card); color: var(--brown);
+    border-radius: 22px; font: inherit; font-weight: 700; font-size: 16px; padding: 0 14px; cursor: pointer; }
+  nav button:focus-visible, .copy:focus-visible, .chip button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin: 18px 0; padding: 18px 16px 16px; scroll-margin-top: 70px; }
+  .tag { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; }
+  .num { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--brown); color: #fffdf6; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 17px; }
+  .kicker { font-size: 13px; color: var(--muted); font-weight: 700; letter-spacing: .04em; }
+  h2.t { margin: 0; font-size: 21px; line-height: 1.3; }
+  .when { margin: 6px 0 12px; color: var(--muted); font-size: 15.5px; }
+
+  .block + .block { margin-top: 14px; }
+  .blabel { font-size: 14px; font-weight: 700; color: var(--brown); margin: 0 0 6px; }
+  .prompt { background: #fff; border: 1.5px solid var(--gold); border-radius: 10px; padding: 12px 14px; font-size: 16.5px; line-height: 1.7; word-break: keep-all; overflow-wrap: anywhere; }
+  .prompt p { margin: 0 0 4px; }
+  .prompt p:last-child { margin-bottom: 0; }
+  .copy { width: 100%; min-height: 50px; margin-top: 10px; border: 0; border-radius: 10px; background: var(--gold); color: var(--brown);
+    font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; }
+  .copy[data-done="1"] { background: var(--ok); color: #fff; }
+  .tip { margin: 12px 0 0; font-size: 15.5px; color: var(--muted); }
+  .tip b { color: var(--brown); }
+
+  .more { margin: 26px 0 10px; }
+  .more h2 { font-size: 19px; margin: 0 0 4px; color: var(--brown); }
+  .more p { margin: 0 0 10px; color: var(--muted); font-size: 15.5px; }
+  .chip { display: flex; gap: 8px; align-items: stretch; margin: 8px 0; }
+  .chip span { flex: 1; background: var(--soft); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
+  .chip button { flex: none; width: 76px; border: 0; border-radius: 10px; background: var(--gold); color: var(--brown); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .chip button[data-done="1"] { background: var(--ok); color: #fff; }
+
+  footer { margin-top: 30px; text-align: center; color: var(--muted); font-size: 15px; }
+  footer strong { color: var(--brown); }
+  .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 22px;
+    font-size: 15px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; text-align: center; }
+  .toast.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="in">
+    <p class="eyebrow">꿀쌤 AI 강의 · 학부모 실습자료</p>
+    <h1>우리 집 AI 비서 프롬프트 7개</h1>
+    <p>복사해서 ChatGPT에 붙여넣으면 바로 시작됩니다.</p>
+    <ol class="how">
+      <li>카드 아래 <b>복사하기</b> 버튼을 눌러요</li>
+      <li>ChatGPT 입력창을 길게 눌러 <b>붙여넣기</b> 해요</li>
+      <li><mark class="fill">주황색 부분</mark>만 우리 집에 맞게 고쳐요</li>
+    </ol>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="safety">
+    <h2>입력하기 전에 3가지 약속</h2>
+    <ul>
+      <li>자녀 실명, 학교, 연락처, 성적 기록은 넣지 않아요.</li>
+      <li>AI는 틀릴 수 있어요. 중요한 내용은 교과서와 공식 자료로 확인해요.</li>
+      <li>최종 판단은 언제나 부모가 해요.</li>
+    </ul>
+    <p class="tip" style="margin-top:8px">ChatGPT는 만 13세 미만 아동을 위한 서비스가 아니에요. 아이 혼자 쓰게 하지 말고 부모가 옆에서 함께 사용해 주세요.</p>
+  </div>
+
+  <nav aria-label="프롬프트 바로가기"><div class="row" id="jump"></div></nav>
+
+  <main id="cards"></main>
+
+  <div class="more">
+    <h2>답이 마음에 안 들 때, 한 번 더</h2>
+    <p>처음 답을 그대로 받지 않고 내 쪽으로 바꾸는 것이 AI 활용의 핵심이에요.</p>
+    <div id="chips"></div>
+  </div>
+
+  <footer>
+    <p>하루에 질문 하나면 충분합니다.</p>
+    <p><strong>꿀쌤</strong> | AI·스피치 강사 · 배워서 남주자!</p>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  var CARDS = [
+    { n: 1, kicker: "비서 1 · 냉장고 요리사", title: "오늘 저녁 뭐 먹지?",
+      when: "냉장고 재료만 알려 주면 20분 안에 만들 메뉴를 골라 줘요.",
+      blocks: [{ lines: [
+        "너는 초등학생 자녀가 있는 가정을 위한 친절한 요리 전문가야.",
+        "우리 집 냉장고에는 [달걀, 두부, 당근, 양파, 애호박]이 있어.",
+        "[20분 이내]에 만들 수 있는, [맵지 않은] 저녁 메뉴 3개를 추천해 줘.",
+        "메뉴명 · 재료 · 만드는 방법을 번호 목록으로 짧게 알려 줘.",
+        "없는 재료는 따로 표시하고, 알레르기 주의점도 알려 줘."] }],
+      tip: "<b>꼭 확인:</b> 조리법, 알레르기, 아이가 돕는 일은 어른이 먼저 확인해요." },
+
+    { n: 2, kicker: "비서 1 · 우리 집 맞춤 훈련", title: "추가 질문으로 우리 집 요리사 만들기",
+      when: "1번 답이 나온 뒤에 이어서 보내 보세요. 상황에 맞는 것 하나만 골라도 돼요.",
+      blocks: [
+        { label: "A. 취향 반영", lines: ["우리 아이는 [당근을 잘 안 먹어]. 눈에 덜 띄는 메뉴로 바꿔 줘."] },
+        { label: "B. 시간 줄이기", lines: ["요리할 시간이 [10분]밖에 없어. 가장 쉬운 메뉴 하나를 골라 5단계로 알려 줘."] },
+        { label: "C. 재료 바꾸기", lines: ["우리 집에는 [달걀, 감자, 참치]가 있어. 이 재료로 저녁 메뉴를 다시 추천해 줘."] }],
+      tip: "<b>기억해요:</b> 내 상황을 알려 주고, 결과를 다시 고치는 것이 훈련이에요." },
+
+    { n: 3, kicker: "비서 2 · 학습 코치", title: "아이 눈높이로 쉽게 설명하기",
+      when: "아이가 어려워하는 개념을 학년에 맞는 말로 풀어 줘요.",
+      blocks: [{ lines: [
+        "너는 초등학생 눈높이에 맞춰 설명하는 친절한 학습 코치야.",
+        "우리 아이는 초등학교 [3]학년이고 [분수]를 어려워해.",
+        "1. 아이에게 말하듯 쉬운 말로 설명해 줘.",
+        "2. 생활 속 예시를 2개 들어 줘.",
+        "3. 부모가 아이를 격려할 말을 1개 제안해 줘.",
+        "10줄 이내 번호 목록으로 써 줘."] }],
+      tip: "<b>꼭 확인:</b> AI의 설명은 아이 교과서와 비교해 보세요. 틀릴 수 있어요." },
+
+    { n: 4, kicker: "비서 2 · 학습 코치", title: "정답 대신 생각하게 만드는 질문",
+      when: "정답을 바로 알려 주기보다 아이가 스스로 생각하도록 질문을 준비해요.",
+      blocks: [{ lines: [
+        "너는 아이가 스스로 생각하도록 돕는 학습 코치야.",
+        "초등학교 [3]학년 아이가 [분수]를 어려워해.",
+        "정답을 알려주지 말고, 스스로 생각하게 만드는 질문 5개를 쉬운 순서로 만들어 줘.",
+        "[소리 내어 읽기 좋은 말투로, 한 문장은 30자 이내]로 써 줘.",
+        "막힐 때 쓸 힌트 2개도 알려 줘."] }],
+      tip: "<b>말하기 팁:</b> 질문한 뒤 속으로 하나, 둘, 셋 세며 기다려 주세요. 목소리는 궁금해하는 부드러운 톤으로요." },
+
+    { n: 5, kicker: "비서 3 · 소통 코치", title: "잔소리를 따뜻한 대화로",
+      when: "가상 상황으로 연습해요. 실제 아이의 사생활은 넣지 않아요.",
+      blocks: [{ lines: [
+        "너는 부모와 자녀가 서로 존중하며 대화하도록 돕는 소통 코치야.",
+        "초등학교 4학년 아이가 스마트폰을 그만하라는 말에 화를 내는 가상 상황이야.",
+        "아이가 \"엄마도 맨날 하잖아!\"라고 말했어.",
+        "1. 부모가 피하면 좋은 표현 3개",
+        "2. 공감하면서도 약속을 지키게 하는 문장 3개",
+        "3. 부모와 아이의 짧은 대화문",
+        "[소리 내어 읽기 좋은 구어체로, 한 문장은 30자 이내]로 써 줘. 아이 마음을 단정하지 말고 따뜻하게!"] }],
+      tip: "<b>말하기 팁:</b> 문장은 AI가 도와주고, 목소리는 부모가 선택해요. 마음에 드는 문장을 소리 내어 읽어 보세요." },
+
+    { n: 6, kicker: "도전 · 나만의 질문", title: "빈칸만 채우면 내 질문 완성",
+      when: "주말 활동, 독서 질문, 숙제 미루는 아이와의 대화 중 하나를 골라 [ ] 부분을 채워 보세요.",
+      keepBrackets: true,
+      blocks: [{ lines: [
+        "너는 [어떤 역할: 예) 가족 여행 전문가]야.",
+        "우리 집 상황은 [예) 초등 2학년 아이와 부모, 토요일 오후 3시간]이야.",
+        "[해 줬으면 하는 일: 예) 주말 활동 3개 추천]해 줘. 조건은 [예) 비 오는 날, 3만 원 이내]야.",
+        "[번호 목록으로 짧게] 알려 줘."] }],
+      tip: "<b>막히면:</b> 누구처럼 · 어떤 상황 · 무엇을, 어떤 조건으로 · 어떤 모습으로. 이 네 가지만 떠올려요." },
+
+    { n: 7, kicker: "우리 집 AI 약속 · 소통 코치", title: "아이와 함께 정하는 AI 약속 3가지",
+      when: "우리 집 상황으로 고쳐서, 가족회의 때 아이에게 제안해 보세요.",
+      blocks: [{ lines: [
+        "너는 가족이 함께 정하는 AI 사용 약속을 도와주는 소통 코치야.",
+        "우리 아이는 초등학교 [3]학년이야.",
+        "아이와 함께 정할 수 있는 'AI 사용 약속' 3가지를 만들어 줘.",
+        "1. 숙제 약속: [내가 먼저 풀고, 막히면 힌트만 받고, 마지막에 확인하기] 3단계가 담기게 써 줘.",
+        "2. 개인정보 약속: 얼굴 사진, 이름·학교·연락처를 넣지 않는다는 한 문장.",
+        "3. 시간 약속: [하루 15분, 거실에서, 부모와 함께]를 담은 한 문장.",
+        "[소리 내어 읽기 좋은 말투로, 한 문장은 30자 이내]로 써 줘.",
+        "명령하는 말투 말고, 아이에게 제안하는 따뜻한 말투로 써 줘.",
+        "마지막에 아이에게 처음 꺼낼 말 한 문장도 알려 줘."] }],
+      tip: "<b>기억해요:</b> 약속은 아이와 함께 고쳐서 정해요. 부모가 먼저 지키면 아이도 따라 해요." }
+  ];
+
+  var CHIPS = [
+    "더 쉽게 줄여 줘.",
+    "10줄 이내로 다시 정리해 줘.",
+    "그 재료는 우리 집에 없어. 지금 가진 재료만으로 다시 추천해 줘.",
+    "더 짧고, 소리 내어 읽기 좋은 말투로 바꿔 줘.",
+    "더 짧게, 한 문장씩만 다시 써 줘."
+  ];
+
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function lineHtml(l) { return esc(l).replace(/\[([^\]]+)\]/g, '<mark class="fill">$1</mark>'); }
+  function plain(lines, keep) {
+    return lines.map(function (l) { return keep ? l : l.replace(/\[([^\]]+)\]/g, "$1"); }).join("\n");
+  }
+
+  var toastEl = document.getElementById("toast"), toastTimer;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add("on");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toastEl.classList.remove("on"); }, 2200);
+  }
+
+  function fallbackCopy(text, sourceEl) {
+    var ok = false;
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      ok = document.execCommand("copy"); document.body.removeChild(ta);
+    } catch (e) { ok = false; }
+    if (!ok && sourceEl) {
+      try {
+        var r = document.createRange(); r.selectNodeContents(sourceEl);
+        var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      } catch (e2) {}
+    }
+    return ok;
+  }
+
+  function doCopy(text, btn, sourceEl, doneLabel, idleLabel) {
+    function done() {
+      btn.setAttribute("data-done", "1"); btn.textContent = doneLabel; toast("복사했어요. ChatGPT 입력창에 붙여넣기 하세요.");
+      setTimeout(function () { btn.removeAttribute("data-done"); btn.textContent = idleLabel; }, 2200);
+    }
+    function fail() {
+      var ok = fallbackCopy(text, sourceEl);
+      if (ok) { done(); } else { toast("글자를 길게 눌러 직접 복사해 주세요."); }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fail);
+      } else { fail(); }
+    } catch (e) { fail(); }
+  }
+
+  var cardsEl = document.getElementById("cards"), jumpEl = document.getElementById("jump");
+  CARDS.forEach(function (c) {
+    var sec = document.createElement("section");
+    sec.className = "card"; sec.id = "card-" + c.n;
+    var html = '<div class="tag"><span class="num">' + c.n + '</span><span class="kicker">' + c.kicker + '</span></div>' +
+      '<h2 class="t">' + c.title + '</h2><p class="when">' + c.when + '</p>';
+    c.blocks.forEach(function (b, i) {
+      html += '<div class="block">' + (b.label ? '<p class="blabel">' + b.label + '</p>' : '') +
+        '<div class="prompt" id="p-' + c.n + '-' + i + '">' +
+        b.lines.map(function (l) { return '<p>' + lineHtml(l) + '</p>'; }).join("") + '</div>' +
+        '<button type="button" class="copy" data-card="' + c.n + '" data-block="' + i + '">복사하기</button></div>';
+    });
+    html += '<p class="tip">' + c.tip + '</p>';
+    sec.innerHTML = html;
+    cardsEl.appendChild(sec);
+
+    var jb = document.createElement("button");
+    jb.type = "button"; jb.textContent = c.n; jb.setAttribute("aria-label", c.n + "번 프롬프트로 이동");
+    jb.addEventListener("click", function () { sec.scrollIntoView({ behavior: "smooth", block: "start" }); });
+    jumpEl.appendChild(jb);
+  });
+
+  cardsEl.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest("button.copy") : null;
+    if (!btn) return;
+    var c = CARDS[parseInt(btn.getAttribute("data-card"), 10) - 1];
+    var bi = parseInt(btn.getAttribute("data-block"), 10);
+    var src = document.getElementById("p-" + c.n + "-" + bi);
+    doCopy(plain(c.blocks[bi].lines, !!c.keepBrackets), btn, src, "복사했어요", "복사하기");
+  });
+
+  var chipsEl = document.getElementById("chips");
+  CHIPS.forEach(function (t, i) {
+    var row = document.createElement("div"); row.className = "chip";
+    row.innerHTML = '<span id="chip-' + i + '">' + esc(t) + '</span><button type="button">복사</button>';
+    row.querySelector("button").addEventListener("click", function (ev) {
+      doCopy(t, ev.currentTarget, document.getElementById("chip-" + i), "완료", "복사");
+    });
+    chipsEl.appendChild(row);
+  });
+</script>
+</body>
+</html>
